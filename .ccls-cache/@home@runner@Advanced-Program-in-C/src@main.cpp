@@ -1,7 +1,10 @@
 #include <iostream>
+#include <stdlib.h>
 
-int main() {
+char *mySecret = getenv("GITHUB_TOKEN");
+
+    int
+    main() {
+
   std::cout << "Hello World!\n";
-  std::cout << "Checking connection of github repository with replit.";
-  std::cout << "Checking connection of github repository with replit.";
 }
