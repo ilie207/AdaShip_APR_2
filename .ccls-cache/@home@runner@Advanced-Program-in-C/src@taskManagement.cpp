@@ -4,9 +4,6 @@
 #include <fstream>
 #include <sstream>
 #include <iomanip>
-#include <stdlib.h>
-
-char *mySecret = getenv("GITHUB_TOKEN");
 
 class Task {
 public:
@@ -50,15 +47,15 @@ void addTask(User& user, const std::string& title, const std::string& descriptio
 }
 
 void saveTasksToCSV(const User& user, const std::string& filename) {
-  std::ofstream outfile("tasks.csv", std::ios::app);
+  std::ofstream outfile(filename, std::ios::app);
   for (const auto& task : user.tasks) {
-    outfile << task.title << "," << std::time_t (&task.deadline) << "," << task.description << "," << task.priority << "\n";
+    outfile << task.title << "," << std::put_time(std::localtime(&task.deadline), "%Y-%m-%d") << "," << task.description << "," << task.priority << "\n";
   }
   outfile.close();
 }
 
 void loadTasksFromCSV(User& user, const std::string& filename) {
-  std::ifstream infile("tasks.csv");
+  std::ifstream infile(filename);
   if (!infile.is_open()) {
     std::cerr << "Error: Unable to open file " << filename << "\n";
     return;
@@ -86,7 +83,58 @@ void loadTasksFromCSV(User& user, const std::string& filename) {
   infile.close();
 }
 
-    int main() {
+  int main() {
+    User user("John Schmoe");
+    loadTasksFromCSV(user, "tasks.csv");
 
-  std::cout << "Hello World!\n";
+    while (true) {
+      std::cout << "Welcome to the task management system \n";
+      std::cout << "Please select an option: \n";
+      std::cout << "1. Add Task\n";
+      std::cout << "2. Display Tasks\n";
+      std::cout << "3. Save Tasks to CSV\n";
+      std::cout << "4. Exit\n";
+
+        int choice;
+      std::cin >> choice;
+
+      switch(choice) {
+        case 1: {
+          std::string title, description;
+          std::time_t deadline;
+          int priority;
+
+          std::cout << "Enter task title: ";
+          std::cin.ignore();
+          std::getline(std::cin, title);
+
+          std::cout << "Enter task description: ";
+          std::getline(std::cin, description);
+
+          std::cout << "Enter task deadline (YYYY-MM-DD): ";
+          std::tm tm = {};
+          std::cin >> std::get_time(&tm, "%Y-%m-%d");
+          deadline = std::mktime(&tm);
+
+          std::cout << "Enter task priority: ";
+          std::cin >> priority;
+
+          addTask(user, title, description, deadline, priority);
+          break;
+        }
+        case 2: 
+        std::sort(user.tasks.begin(), user.tasks.end(), compareTasks);
+        displayTasks(user);
+        break;
+        case 3: 
+        saveTasksToCSV(user, "tasks.csv");
+        std::cout << "Tasks saved to tasks.csv\n";
+        break;
+        case 4:
+        return 0;
+        default:
+        std::cout << "Invalid choice. Please try again.\n";
+      }
+    }
+    return 0;
 }
