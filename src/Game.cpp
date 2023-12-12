@@ -1,86 +1,79 @@
-#include "Game.h"
-#include <cstdlib>
 #include <iostream>
-#include <string>
-#include <vector>
 
-Game::Game() : isGameOver(false) {
-  // Initialize players and setup the game
-  humanPlayer.setup();
-  computerPlayer.setup();
+#include "../headers/Game.h"
+#include "../headers/Board.h"
+#include "../headers/ComputerPlayer.h"
+#include "../headers/Player.h"
+
+Game::Game() : configLoader(ConfigLoader::getInstance()) {
 }
 
-void Game::run() {
-  while (!isGameOver) {
-    printBoards();
-    playerTurn();
-    isGameOver = checkGameOver();
-    if (isGameOver)
-      break;
+void Game::start() {
+  Board board;
+  ConfigLoader::getInstance().loadConfig(board);
 
-    printBoards();
-    computerTurn();
-    isGameOver = checkGameOver();
-  }
+  const std::vector<std::pair<std::string, int>>& shipList = ConfigLoader::getInstance().getShipList();
 
-  // Display the winner
-  if (humanPlayer.isWinner()) {
-    std::cout << "Congratulations! You won!" << std::endl;
-  } else {
-    std::cout << "Computer wins. Better luck next time!" << std::endl;
-  }
-}
 
-void Game::printBoards() {
-  // Display the current state of the boards
-  std::cout << "Your Shipboard:" << std::endl;
-  humanPlayer.printShipBoard();
-
-  std::cout << "Your Targetboard:" << std::endl;
-  humanPlayer.printTargetBoard();
-
-  std::cout << "Computer's Targetboard:" << std::endl;
-  computerPlayer.printTargetBoard();
-}
-
-void Game::playerTurn() {
-  std::cout << "Your Turn!" << std::endl;
-  printBoards(); // Display the boards before the turn
-
-  std::string targetCoordinate;
-  do {
-    std::cout << "Enter target coordinate (e.g., A1, B2): ";
-    std::cin >> targetCoordinate;
-  } while (!humanPlayer.isValidCoordinate(targetCoordinate) ||
-           humanPlayer.targetBoard.isTargeted(targetCoordinate));
-
-  // Mark the target on the computer's shipboard
-  bool isHit = computerPlayer.shipBoard.markHit(targetCoordinate);
-  bool playerHit = humanPlayer.targetBoard.markTarget(targetCoordinate, isHit);
-
-  // Display the result of the turn
-  std::cout << "Your Turn Result:" << std::endl;
-  printBoards();
-  if (playerHit) {
-    std::cout << "Hit!" << std::endl;
-  } else {
-    std::cout << "Miss!" << std::endl;
-  }
-
-  // Check for a win condition
-  if (computerPlayer.shipBoard.allShipsSunk()) {
-    std::cout << "Congratulations! You've sunk all of the computer's ships!"
+  std::cout << "Debug: shipList inside game file:" << std::endl;
+  for (const auto &ship : shipList) {
+    std::cout << "Ship Name: " << ship.first << ", Length: " << ship.second
               << std::endl;
-    isGameOver = true;
   }
-}
 
-void Game::computerTurn() {
-  std::cout << "Computer's Turn!" << std::endl;
-  computerPlayer.takeTurn(humanPlayer);
-}
+  Player player;
+  ComputerPlayer computer;
 
-bool Game::checkGameOver() {
-  // Check if either player has won
-  return humanPlayer.isWinner() || computerPlayer.isWinner();
+  std::cout << "Welcome to Battleship Game!" << std::endl;
+  std::cout << "Please chose one of the options:" << std::endl;
+  std::cout << "1. Player v Computer." << std::endl;
+  std::cout << "2. Exit Game." << std::endl;
+  int option;
+  std::cin >> option;
+
+  switch (option) {
+  case 1:
+    // Prompt the player to place ships manually or randomly
+    std::cout << "Do you want to place ships manually or randomly? (M/R): ";
+    char choice;
+    std::cin >> choice;
+
+    if (toupper(choice) == 'M' || toupper(choice) == 'm') {
+      player.placeShipsManually();
+    } else if (toupper(choice) == 'R' || toupper(choice) == 'r') {
+      player.placeShipsRandomly();
+    } else {
+      std::cout << "Invalid choice. Please try again." << std::endl;
+    }
+
+    std::cout << "\nComputer is placing its ships on the board...\n";
+    computer.placeComputerShipsRandomly();
+    // Main game loop
+    while (!board.isGameOver()) {
+      board.printBoards();
+      player.playerTurn();
+      if (!board.isGameOver()) { // Check if the game is still not over before
+                                 // the computer's turn
+        computer.computerTurn();
+      }
+    }
+
+    // Display the final result
+    board.printBoards();
+    std::cout << "Game Over!" << std::endl;
+    break;
+
+  case 2:
+    std::cout << "Exiting game..." << std::endl;
+    return;
+    break;
+
+  default:
+    std::cout << "Invalid choice. Please try again." << std::endl;
+    break;
+  }
+
+  // Display the final result
+  board.printBoards();
+  std::cout << "Game Over!" << std::endl;
 }
