@@ -1,163 +1,229 @@
-#include "Board.h"
-#include <cstdlib>
-#include <ctime>
+#include "../headers/Board.h"
+#include "../headers/Player.h"
+#include "../headers/ConifgLoader.h"
+
 #include <iomanip>
 #include <iostream>
-#include <string>
-#include <vector>
 
-Board::Board() {
-  // Initialize shipGrid and targetGrid
-  shipGrid.resize(10, std::vector<char>(10, '.'));
-  targetGrid.resize(10, std::vector<char>(10, '.'));
+void Board::initializeBoard(int rows, int cols) {
+
+  playerBoard.resize(rows, std::vector<char>(cols, EMPTY_CELL));
+
+  playerTargetBoard.resize(rows, std::vector<char>(cols, EMPTY_CELL));
+
+  computerBoard.resize(rows, std::vector<char>(cols, EMPTY_CELL));
+
+  computerTargetBoard.resize(rows, std::vector<char>(cols, EMPTY_CELL));
 }
 
-void Board::autoPlaceShips() {
-  // For simplicity, auto-place ships at random locations
-  std::srand(std::time(nullptr)); // Seed for randomization
+void Board::printBoards() {
+  // Print player's board
+  std::cout << "Player's Board:" << std::endl;
 
-  // Place Carrier (length 5)
-  placeShipRandomly(5, 'C');
-
-  // Place Battleship (length 4)
-  placeShipRandomly(4, 'B');
-
-  // Place Destroyer (length 3)
-  placeShipRandomly(3, 'D');
-
-  // Place Submarine (length 3)
-  placeShipRandomly(3, 'S');
-
-  // Place Patrol Boat (length 2)
-  placeShipRandomly(2, 'P');
-}
-
-void Board::autoFire(Board &opponentBoard) {
-  // For simplicity, auto-fire at random locations
-  int row = std::rand() % 10;
-  int col = std::rand() % 10;
-  std::string targetCoordinate = convertToCoordinate(row, col);
-
-  // Check if the coordinate has been targeted before
-  while (opponentBoard.isTargeted(targetCoordinate)) {
-    row = std::rand() % 10;
-    col = std::rand() % 10;
-    targetCoordinate = convertToCoordinate(row, col);
+  std::cout << "   ";
+  for (int i = 0; i < BOARD_SIZE; ++i) {
+    char colLetter = static_cast<char>('A' + i);
+    std::cout << colLetter << " ";
   }
+  std::cout << std::endl;
 
-  // Mark the target on the opponent's shipboard
-  bool isHit = opponentBoard.markHit(targetCoordinate);
-  markTarget(targetCoordinate, isHit);
-}
-
-bool Board::markHit(const std::string &coordinate) {
-  // Mark the hit on the shipGrid and return true if a ship is hit
-  int row, col;
-  convertToRowCol(coordinate, row, col);
-
-  if (shipGrid[row][col] != '.') {
-    // Mark the hit on the shipGrid
-    shipGrid[row][col] = 'X';
-
-    // Check if the entire ship is sunk
-    if (isShipSunk(coordinate)) {
-      std::cout << "You sunk a ship!" << std::endl;
-    }
-
-    return true;
-  } else {
-    return false;
-  }
-}
-
-bool Board::markTarget(const std::string &coordinate, bool isHit) {
-  // Mark the target on the targetGrid
-  int row, col;
-  convertToRowCol(coordinate, row, col);
-  targetGrid[row][col] = (isHit) ? 'H' : 'M';
-  return isHit;
-}
-
-bool Board::isTargeted(const std::string &coordinate) const {
-  // Check if the coordinate has been targeted before
-  int row, col;
-  convertToRowCol(coordinate, row, col);
-  return (targetGrid[row][col] == 'H' || targetGrid[row][col] == 'M');
-}
-
-bool Board::allShipsSunk() const {
-  // Check if all ships are sunk
-  for (const auto &row : shipGrid) {
-    for (char cell : row) {
-      if (cell != 'O' && cell != 'X') {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-void Board::printBoard() const {
-  // Print the board for display
-  std::cout << "   A B C D E F G H I J" << std::endl;
-  for (int i = 0; i < 10; ++i) {
+  for (int i = 0; i < BOARD_SIZE; ++i) {
+    // Display row numbers at the beginning of each row
     std::cout << std::setw(2) << i + 1 << " ";
-    for (int j = 0; j < 10; ++j) {
-      std::cout << shipGrid[i][j] << " ";
+    for (int j = 0; j < BOARD_SIZE; ++j) {
+      std::cout << playerBoard[i][j] << " ";
+    }
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
+
+  // Print player's target board
+  std::cout << "Player's Target Board:" << std::endl;
+
+  // Display column letters for player's target board
+  std::cout << "   ";
+  for (int i = 0; i < BOARD_SIZE; ++i) {
+    char colLetter = static_cast<char>('A' + i);
+    std::cout << colLetter << " ";
+  }
+  std::cout << std::endl;
+
+  for (int i = 0; i < BOARD_SIZE; ++i) {
+    std::cout << std::setw(2) << i + 1 << " ";
+    for (int j = 0; j < BOARD_SIZE; ++j) {
+      std::cout << playerTargetBoard[i][j] << " ";
+    }
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
+
+  // Print computer's board
+  std::cout << "Computer's Board:" << std::endl;
+
+  // Display column letters for computer's board
+  std::cout << "   ";
+  for (int i = 0; i < BOARD_SIZE; ++i) {
+    char colLetter = static_cast<char>('A' + i);
+    std::cout << colLetter << " ";
+  }
+  std::cout << std::endl;
+
+  for (int i = 0; i < BOARD_SIZE; ++i) {
+    std::cout << std::setw(2) << i + 1 << " ";
+    for (int j = 0; j < BOARD_SIZE; ++j) {
+      std::cout << computerBoard[i][j] << " ";
+    }
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
+
+  // Print computer's target board
+  std::cout << "Computer's Target Board:" << std::endl;
+
+  // Display column letters for computer's board
+  std::cout << "   ";
+  for (int i = 0; i < BOARD_SIZE; ++i) {
+    char colLetter = static_cast<char>('A' + i);
+    std::cout << colLetter << " ";
+  }
+  std::cout << std::endl;
+
+  for (int i = 0; i < BOARD_SIZE; ++i) {
+    std::cout << std::setw(2) << i + 1 << " ";
+    for (int j = 0; j < BOARD_SIZE; ++j) {
+      std::cout << computerTargetBoard[i][j] << " ";
     }
     std::cout << std::endl;
   }
   std::cout << std::endl;
 }
 
-void Board::placeShipRandomly(int length, char shipSymbol) {
-  // Place a ship of given length randomly on the shipGrid
-  int row, col;
-  bool isHorizontal = (std::rand() % 2 == 0);
-
-  if (isHorizontal) {
-    // Place horizontally
-    row = std::rand() % 10;
-    col = std::rand() % (10 - length + 1);
+void Board::updateBoard(std::vector<std::vector<char>> &board, int row, int col, int length, bool horizontal, char symbol) {
+  // Update the board with the placed ship
+  if (horizontal) {
+    for (int j = col; j < col + length; ++j) {
+      board[row][j] = symbol;
+    }
   } else {
-    // Place vertically
-    row = std::rand() % (10 - length + 1);
-    col = std::rand() % 10;
-  }
-
-  for (int i = 0; i < length; ++i) {
-    if (isHorizontal) {
-      shipGrid[row][col + i] = shipSymbol;
-      shipCoordinates.push_back(convertToCoordinate(row, col + i));
-    } else {
-      shipGrid[row + i][col] = shipSymbol;
-      shipCoordinates.push_back(convertToCoordinate(row + i, col));
+    for (int i = row; i < row + length; ++i) {
+      board[i][col] = symbol;
     }
   }
 }
 
-bool Board::isShipSunk(const std::string &coordinate) const {
-  // Check if the entire ship is sunk
-  char shipSymbol = shipGrid[coordinate[1] - '0' - 1][coordinate[0] - 'A'];
-  for (const std::string &shipCoord : shipCoordinates) {
-    int row, col;
-    convertToRowCol(shipCoord, row, col);
-    if (shipGrid[row][col] == shipSymbol) {
-      return false; // The ship is not entirely sunk
+bool Board::isValidCoordinate(int row, int col) {
+  // Check if the coordinate is valid (within the board)
+  return row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE;
+}
+
+bool Board::isValidTarget(int row, int col) {
+  // Check if the coordinate is valid (within the board) and the target has not
+  // been hit or sunk before
+  return isValidCoordinate(row, col) &&
+         playerTargetBoard[row][col] != HIT_CELL &&
+         playerTargetBoard[row][col] != MISS_CELL;
+}
+
+
+bool Board::isValidPlacement(int row, int col, int length, bool horizontal, const std::vector<std::vector<char>> &board) {
+  // Check if the placement is valid
+  if (horizontal) {
+    if (col + length > BOARD_SIZE) {
+      return false; // Ship goes beyond the right edge of the board
+    }
+
+    for (int j = col; j < col + length; ++j) {
+      if (board[row][j] == SHIP_CELL) {
+        return false; // Overlaps with an existing ship
+      }
+    }
+  } else {
+    if (row + length > BOARD_SIZE) {
+      return false; // Ship goes beyond the bottom edge of the board
+    }
+
+    for (int i = row; i < row + length; ++i) {
+      if (board[i][col] == SHIP_CELL) {
+        return false; // Overlaps with an existing ship
+      }
     }
   }
-  return true; // The ship is entirely sunk
+
+  return true;
 }
 
-void Board::convertToRowCol(const std::string &coordinate, int &row,
-                            int &col) const {
-  // Convert the coordinate (e.g., A1) to row and column indices
-  col = coordinate[0] - 'A';
-  row = coordinate[1] - '0' - 1;
+bool Board::checkWin() {
+  const auto& shipList = ConfigLoader::getInstance().getShipList();
+  // Check if all ships on both player's and computer's boards are sunk
+  for (const auto &ship : shipList) {
+    char shipSymbol = ship.first[0];
+
+    // Check player's board
+    for (int i = 0; i < BOARD_SIZE; ++i) {
+      for (int j = 0; j < BOARD_SIZE; ++j) {
+        if (playerBoard[i][j] == shipSymbol) {
+          return false;
+          // At least one ship is not sunk on the player's board
+        }
+      }
+    }
+
+    // Check computer's board
+    for (int i = 0; i < BOARD_SIZE; ++i) {
+      for (int j = 0; j < BOARD_SIZE; ++j) {
+        if (computerBoard[i][j] == shipSymbol) {
+          return false;
+          // At least one ship is not sunk on the computer's board
+        }
+      }
+    }
+  }
+
+  // All ships are sunk on both player's and computer's boards
+  return true;
 }
 
-std::string Board::convertToCoordinate(int row, int col) const {
-  // Convert row and column indices to a coordinate (e.g., A1)
-  char colChar = col + 'A';
-  return colChar + std::to_string(row + 1);
+bool Board::isGameOver() {
+  const auto& shipList = ConfigLoader::getInstance().getShipList();
+  for (const auto &ship : shipList) {
+    std::string shipName = ship.first;
+    bool playerShipPresent = false;
+    bool computerShipPresent = false;
+
+    // Check if any part of the ship is still present on the player's board
+    for (int i = 0; i < BOARD_SIZE; ++i) {
+      for (int j = 0; j < BOARD_SIZE; ++j) {
+        if (Board::playerBoard[i][j] == shipName[0] &&
+            Board::playerBoard[i][j] != EMPTY_CELL) {
+          playerShipPresent = true;
+          break;
+        }
+      }
+      if (playerShipPresent) {
+        break;
+      }
+    }
+
+    // Check if any part of the ship is still present on the computer's board
+    for (int i = 0; i < BOARD_SIZE; ++i) {
+      for (int j = 0; j < BOARD_SIZE; ++j) {
+        if (computerBoard[i][j] == shipName[0] &&
+            computerBoard[i][j] != EMPTY_CELL) {
+          computerShipPresent = true;
+          break;
+        }
+      }
+      if (computerShipPresent) {
+        break;
+      }
+    }
+
+    // If any ship is present on either board, the game is not over
+    if (playerShipPresent || computerShipPresent) {
+      return false;
+    }
+  }
+
+  // All ships have been sunk or not placed yet
+  return true;
 }

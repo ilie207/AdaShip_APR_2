@@ -1,110 +1,205 @@
-#include "Player.h"
+#include "../headers/Player.h"
+#include "../headers/Board.h"
+#include "../headers/ComputerPlayer.h"
+#include "../headers/ConifgLoader.h"
+
+#include <cstdlib>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <string>
+#include <limits>
+#include <sstream>
 
 Player::Player() {
-  // Constructor
+  // shipList = {{"Carrier", 5}, {"Battleship", 4}, {"Destroyer", 3},
+  // {"Submarine", 3}, {"PatrolBoat", 2}};
 }
 
-void Player::setup() {
-  std::cout << "Setting up your ships..." << std::endl;
+void Player::placeShipsManually() {
+  const auto &shipList = ConfigLoader::getInstance().getShipList();
+  for (const auto &ship : shipList) {
+    int length = ship.second;
+    std::string shipName = ship.first;
 
-  // For simplicity, auto-place ships
-  shipBoard.autoPlaceShips();
+    std::cout << "Placing " << shipName << " of length " << length << std::endl;
 
-  // Display the initial shipboard
-  std::cout << "Your Shipboard:" << std::endl;
-  shipBoard.printBoard();
+    bool validInput = false;
+
+    while (!validInput) {
+      std::cout << "Enter starting row and column (e.g., A 1): ";
+      char startRow;
+      int startCol;
+
+      // Check if input is valid
+      if (!(std::cin >> startRow >> startCol)) {
+        std::cout << "Invalid input. Please try again." << std::endl;
+        std::cin.clear();  // Clear error flags
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  // Clear input buffer
+        continue;
+      }
+
+      // Convert row to index (e.g., A -> 0, B -> 1, etc.)
+      int row = std::toupper(startRow) - 'A';
+      int col = startCol - 1;
+
+
+      // Ask the user for orientation
+      std::cout << "Enter orientation (H for horizontal, V for vertical): ";
+      char orientation;
+      std::cin >> orientation;
+
+      bool horizontal = (orientation == 'H' || orientation == 'h');
+
+      // Validate input
+      if (isValidCoordinate(col, row) && isValidPlacement(col, row, length, horizontal, playerBoard)) {
+        // Valid placement, update the board
+        updateBoard(playerBoard, col, row, length, horizontal, SHIP_CELL);
+        validInput = true;
+      } else {
+        std::cout << "Invalid placement. Please try again." << std::endl;
+        // Clear the input buffer in case of invalid input
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      }
+    }
+  }
 }
 
-void Player::takeTurn(Player &opponent) {
-  std::cout << "It's your turn!" << std::endl;
+void Player::placeShipsRandomly() {
+  const auto &shipList = ConfigLoader::getInstance().getShipList();
 
-  printTargetBoard();
+  for (const auto &ship : shipList) {
+    std::string shipName = ship.first;
+    int length = ship.second;
 
-  // Player fires at a target
-  std::string targetCoordinate;
-  do {
-    std::cout << "Enter target coordinate (e.g., A1, B2): ";
-    std::cin >> targetCoordinate;
-  } while (!isValidCoordinate(targetCoordinate) ||
-           targetBoard.isTargeted(targetCoordinate));
+    std::cout << "Placing " << shipName << " of length " << length
+              << " randomly." << std::endl;
 
-  // Mark the target on the opponent's shipboard
-  bool isHit = opponent.shipBoard.markHit(targetCoordinate);
-  targetBoard.markTarget(targetCoordinate, isHit);
+    for (;;) {
+      int row = std::rand() % BOARD_SIZE;
+      int col = std::rand() % BOARD_SIZE;
+      // Randomly choose horizontal or vertical placement
+      bool horizontal = std::rand() % 2 == 0;
 
-  // Display the result of the turn
-  std::cout << "Your Turn Result:" << std::endl;
-  targetBoard.printBoard();
+      if (isValidPlacement(col, row, length, horizontal, playerBoard)) {
+        // Check for overlap with existing ships on the playerBoard
+        bool overlap = false;
+        if (horizontal) {
+          for (int j = col; j < col + length; ++j) {
+            if (playerBoard[row][j] == SHIP_CELL) {
+              overlap = true;
+              break;
+            }
+          }
+        } else {
+          for (int i = row; i < row + length; ++i) {
+            if (playerBoard[i][col] == SHIP_CELL) {
+              overlap = true;
+              break;
+            }
+          }
+        }
 
-  // Check for a win condition
-  if (opponent.shipBoard.allShipsSunk()) {
-    std::cout << "Congratulations! You've sunk all of the opponent's ships!"
+        if (!overlap) {
+          // Valid placement, update the board
+          updateBoard(playerBoard, col, row, length, horizontal, SHIP_CELL);
+          break;
+        }
+      }
+    }
+  }
+}
+
+void Player::updatePlayerBoard(int row, int col, bool &hit, bool &shipSunk) {
+  // Check if the computer's move hits a ship on the player's board
+  if (Board::playerBoard[row][col] == SHIP_CELL) {
+    hit = true;
+    playerTargetBoard[row][col] =
+        HIT_CELL; // Mark the hit on the player's target board
+
+    // Check if the entire ship is sunk
+    shipSunk = true;
+    char shipSymbol = playerBoard[col][row];
+    for (int i = 0; i < BOARD_SIZE; ++i) {
+      for (int j = 0; j < BOARD_SIZE; ++j) {
+        if (Board::playerBoard[i][j] == shipSymbol &&
+            computerTargetBoard[i][j] != HIT_CELL) {
+          shipSunk = false;
+          break;
+        }
+      }
+      if (!shipSunk) {
+        break;
+      }
+    }
+
+    // If the ship is sunk, mark it on both player's and computer's target
+    // boards
+    if (shipSunk) {
+      for (int i = 0; i < BOARD_SIZE; ++i) {
+        for (int j = 0; j < BOARD_SIZE; ++j) {
+          if (computerBoard[i][j] == shipSymbol) {
+            playerTargetBoard[i][j] = HIT_CELL;
+          }
+        }
+      }
+    } else {
+      // If the ship is not sunk, mark only on the player's target board
+      playerTargetBoard[row][col] = HIT_CELL;
+    }
+  } else {
+    hit = false;
+    playerTargetBoard[row][col] =
+        MISS_CELL; // Mark the miss on the player's target board
+  }
+  // Always mark the move on the player's target board, whether hit or miss
+  playerTargetBoard[row][col] = (hit) ? HIT_CELL : MISS_CELL;
+}
+
+void Player::playerTurn() {
+  bool hit = false;
+  bool shipSunk = false;
+
+  std::cout << "Player's Turn" << std::endl;
+
+  for (;;) {
+    std::cout << "Enter target row and column (e.g., A 1): ";
+    char targetRow;
+    int targetCol;
+    std::cin >> targetRow >> targetCol;
+
+    // Convert row to index (e.g., A -> 0, B -> 1, etc.)
+    int row = static_cast<int>(targetRow) - static_cast<int>('A');
+    int col = targetCol - 1;
+
+    // Validate input
+    if (isValidCoordinate(col, row) && isValidTarget(col, row)) {
+      // Valid target, update the player's board
+      updatePlayerBoard(col, row, hit, shipSunk);
+      break;
+    } else {
+      std::cout << "Invalid target. Please try again." << std::endl;
+      // Clear the input buffer in case of invalid input
+      std::cin.clear();
+      std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
+  }
+
+  // Display result of the player's turn
+  if (hit) {
+    std::cout << "Hit!";
+    if (shipSunk) {
+      std::cout << " You sunk a ship!";
+    }
+  } else {
+    std::cout << "Miss!";
+  }
+
+  std::cout << std::endl;
+
+  // Check if the player has won
+  if (checkWin()) {
+    std::cout << "Congratulations! You've sunk all enemy ships. You win!"
               << std::endl;
   }
-}
-
-bool Player::markHit(const std::string &coordinate) {
-  // Check if the coordinate has a valid format
-  if (!isValidCoordinate(coordinate)) {
-    return false;
-  }
-
-  // Extract row and column from the coordinate
-  char col = coordinate[0];
-  int row = coordinate[1] - '0' - 1; // Adjust to zero-based index
-
-  // Check if the target is a valid cell on the shipboard
-  if (row < 0 || row >= 10 || col < 'A' || col - 'A' >= 10) {
-    return false;
-  }
-
-  // Check if the cell is already marked as a hit or miss
-  if (shipBoard.targetGrid[row][col - 'A'] == 'H' ||
-      shipBoard.targetGrid[row][col - 'A'] == 'M') {
-    std::cout << "You've already targeted this coordinate." << std::endl;
-    return false; // Cell has already been targeted
-  }
-
-  // Mark the target on the opponent's shipboard
-  bool isHit = shipBoard.markHit(coordinate);
-
-  // Mark the target on the player's target board
-  targetBoard.markTarget(coordinate, isHit);
-
-  return true; // Hit was successful
-}
-
-bool Player::isWinner() const {
-  // Check for a win condition
-  return shipBoard.allShipsSunk();
-}
-
-void Player::printShipBoard() const {
-  std::cout << "Your Shipboard:" << std::endl;
-  shipBoard.printBoard();
-}
-
-void Player::printTargetBoard() const {
-  std::cout << "Your Targetboard:" << std::endl;
-  targetBoard.printBoard();
-}
-
-bool Player::isValidCoordinate(const std::string &coordinate) const {
-  // Check if the coordinate has a valid format (e.g., A1, B2)
-  if (coordinate.length() != 2) {
-    return false;
-  }
-
-  char col = coordinate[0];
-  int row = coordinate[1] - '0';
-
-  return (col >= 'A' && col <= 'J') && (row >= 1 && row <= 10);
-}
-
-bool Player::isTargeted(const std::string &coordinate) const {
-  // Check if the coordinate has been targeted on the targetBoard
-  return targetBoard.isTargeted(coordinate);
 }
