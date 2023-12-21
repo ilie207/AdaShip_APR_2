@@ -6,17 +6,25 @@
 #include <string>
 #include <vector>
 
+class ComputerPlayer;
+
 class Player : public Board{
 
 public:
  std::vector<std::pair<std::string, int>> shipList;  
-  Player();
+  explicit Player(ComputerPlayer& computerPlayer);
+
   void placeShipsManually();
   void placeShipsRandomly();
+  void placeShipRandomly(const std::string& shipName, int length);
   void updatePlayerBoard(int row, int col, bool &hit, bool &shipSunk);
   void playerTurn();
+  void printBoards() const override;
+  const std::vector<std::vector<char>>& getPlayerBoard() const; 
+bool isGameOver();
+
 
 private:
-//Board playerBoard;
+ComputerPlayer& computerPlayer; 
 };
 #endif

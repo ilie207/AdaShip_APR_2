@@ -1,4 +1,4 @@
-#include "../headers/ConifgLoader.h"
+#include "../headers/ConfigLoader.h"
 #include "../headers/Board.h"
 #include <fstream>
 #include <iostream>
@@ -31,6 +31,7 @@ void ConfigLoader::loadConfig(Board &board) {
       int rows, cols;
       char x; // to store the 'x' between rows and columns
       iss >> rows >> x >> cols;
+      boardSize = {rows, cols};
 
       // Set up the game board with the specified dimensions
       board.initializeBoard(rows, cols);
@@ -52,15 +53,13 @@ void ConfigLoader::loadConfig(Board &board) {
   }
 
   configFile.close();
-  // Debug output to check shipList in Board file
-  std::cout << "Debug: shipList contents after loading config:" << std::endl;
-  for (const auto &ship : shipList) {
-    std::cout << "Ship Name: " << ship.first << ", Length: " << ship.second
-              << std::endl;
-  }
 }
 
 const std::vector<std::pair<std::string, int>> &
 ConfigLoader::getShipList() const {
   return shipList;
+}
+
+std::pair<int, int> ConfigLoader::getBoardSize() const {
+  return boardSize;
 }

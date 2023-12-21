@@ -1,17 +1,18 @@
 #include "../headers/ComputerPlayer.h"
+#include "../headers/ConfigLoader.h"
 #include "../headers/Board.h"
-#include "../headers/ConifgLoader.h"
 #include "../headers/Player.h"
 
 #include <chrono>
 #include <iostream>
 #include <thread>
 
-// Board board;
+ComputerPlayer::ComputerPlayer() {
+  initializeBoard(BOARD_SIZE, BOARD_SIZE);
+}
 
 void ComputerPlayer::placeComputerShipsRandomly() {
-
-  const auto &shipList = ConfigLoader::getInstance().getShipList();
+  const auto& shipList = ConfigLoader::getInstance().getShipList();
 
   for (const auto &ship : shipList) {
     int length = ship.second;
@@ -20,36 +21,15 @@ void ComputerPlayer::placeComputerShipsRandomly() {
     std::cout << "Placing " << shipName << " of length " << length
               << " randomly." << std::endl;
 
-    for (;;) {
+    while (true) {
       int row = std::rand() % BOARD_SIZE;
       int col = std::rand() % BOARD_SIZE;
-      bool horizontal = std::rand() % 2 ==
-                        0; // Randomly choose horizontal or vertical placement
+      // Randomly choose horizontal or vertical placement
+      bool horizontal = std::rand() % 2 == 0;
 
-      if (isValidPlacement(col, row, length, horizontal, computerBoard)) {
-        // Check for overlap with existing ships on the computerBoard
-        bool overlap = false;
-        if (horizontal) {
-          for (int j = col; j < col + length; ++j) {
-            if (computerBoard[row][j] == SHIP_CELL) {
-              overlap = true;
-              break;
-            }
-          }
-        } else {
-          for (int i = row; i < row + length; ++i) {
-            if (computerBoard[i][col] == SHIP_CELL) {
-              overlap = true;
-              break;
-            }
-          }
-        }
-
-        if (!overlap) {
-          // Valid placement, update the board
-          updateBoard(computerBoard, col, row, length, horizontal, SHIP_CELL);
-          break;
-        }
+      if (Board::isValidPlacement(row, col, length, horizontal, computerBoard)) {
+        Board::updateBoard(computerBoard, row, col, length, horizontal, shipName[0]);
+        break;
       }
     }
   }
@@ -61,19 +41,19 @@ void ComputerPlayer::computerTurn() {
 
   std::cout << "Computer's Turn" << std::endl;
 
-  // Implementing a simple auto-fire option for the computer
-  for (int attempts = 0; attempts < 5; ++attempts) {
+  std::this_thread::sleep_for(std::chrono::seconds(1));
+  // Loop until a valid target is selected
+  while (true) {
+    // Randomly select a target cell
     int row = std::rand() % BOARD_SIZE;
     int col = std::rand() % BOARD_SIZE;
+    // Check if the target cell is already hit or missed
+    if (isValidCoordinate(row, col) && 
+      isValidTarget(row, col)) {
+      // Announce the computer's target
+      std::cout << "Computer fires at " << static_cast<char>('A' + row) << col + 1 << std::endl;
 
-    if (isValidCoordinate(col, row) &&
-        computerTargetBoard[row][col] == EMPTY_CELL) {
-      std::cout << "Computer fires at " << static_cast<char>(row + 'A')
-                << col + 1 << std::endl;
-      std::this_thread::sleep_for(
-          std::chrono::seconds(2)); // Simulate some delay for dramatic effect
-
-      // Valid target, update the computer's board
+      // Valid target, update the computer's target board
       updateComputerBoard(col, row, hit, shipSunk);
       break;
     }
@@ -92,32 +72,30 @@ void ComputerPlayer::computerTurn() {
   std::cout << std::endl;
 
   // Check if the computer has won
-  if (checkWin()) {
-    std::cout << "Computer has sunk all your ships. You lose!" << std::endl;
-    // Add additional logic if needed
+  if (checkWin(computerTargetBoard, player->playerBoard)) {
+    std::cout << "Computer has sunk all your ships. You lose!"
+      << std::endl;
   }
-
   // Require user interaction to end the computer's turn
   std::cout << "Press Enter to continue...";
   std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
   std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
 
-void ComputerPlayer::updateComputerBoard(int row, int col, bool &hit,
-                                         bool &shipSunk) {
-  // Check if the player's move hits a ship on the computer's board
-  if (computerBoard[col][row] == SHIP_CELL) {
+
+void ComputerPlayer::updateComputerBoard(int row, int col, bool &hit, bool &shipSunk) {
+// Check if the player's move hits a ship on the computer's board
+  if (player->getPlayerBoard()[row][col] != EMPTY_CELL) {
     hit = true;
-    playerTargetBoard[col][row] =
-        HIT_CELL; // Mark the hit on the computer's target board
+    computerTargetBoard[row][col] = HIT_CELL;
 
     // Check if the entire ship is sunk
     shipSunk = true;
-    char shipSymbol = computerBoard[row][col];
+    char shipSymbol = player->getPlayerBoard()[row][col];
     for (int i = 0; i < BOARD_SIZE; ++i) {
       for (int j = 0; j < BOARD_SIZE; ++j) {
-        if (computerBoard[i][j] == shipSymbol &&
-            playerTargetBoard[i][j] != HIT_CELL) {
+        if (player->getPlayerBoard()[i][j] == shipSymbol &&
+            computerTargetBoard[i][j] != HIT_CELL) {
           shipSunk = false;
           break;
         }
@@ -131,7 +109,7 @@ void ComputerPlayer::updateComputerBoard(int row, int col, bool &hit,
     if (shipSunk) {
       for (int i = 0; i < BOARD_SIZE; ++i) {
         for (int j = 0; j < BOARD_SIZE; ++j) {
-          if (playerBoard[i][j] == shipSymbol) {
+          if (player->getPlayerBoard()[i][j] == shipSymbol) {
             computerTargetBoard[i][j] = HIT_CELL;
           }
         }
@@ -142,6 +120,18 @@ void ComputerPlayer::updateComputerBoard(int row, int col, bool &hit,
     computerTargetBoard[row][col] =
         MISS_CELL; // Mark the miss on the computer's target board
   }
-  // Always mark the move on the computer's target board, whether hit or miss
-  computerTargetBoard[row][col] = (hit) ? HIT_CELL : MISS_CELL;
+}
+
+
+void ComputerPlayer::printBoards() const {
+  std::cout << "Computer's Board:" << std::endl;
+  printBoard(computerBoard);
+  std::cout << std::endl;
+  std::cout << "Computer's Target Board:" << std::endl;
+  printBoard(computerTargetBoard);
+}
+
+
+void ComputerPlayer::setPlayer(Player* playerObj) {
+    player = playerObj;
 }

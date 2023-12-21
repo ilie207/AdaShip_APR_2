@@ -1,7 +1,7 @@
 #include "../headers/Player.h"
 #include "../headers/Board.h"
 #include "../headers/ComputerPlayer.h"
-#include "../headers/ConifgLoader.h"
+#include "../headers/ConfigLoader.h"
 
 #include <cstdlib>
 #include <fstream>
@@ -10,150 +10,151 @@
 #include <limits>
 #include <sstream>
 
-Player::Player() {
-  // shipList = {{"Carrier", 5}, {"Battleship", 4}, {"Destroyer", 3},
-  // {"Submarine", 3}, {"PatrolBoat", 2}};
+Player::Player(ComputerPlayer& computerPlayer)
+    : computerPlayer(computerPlayer) {
+      initializeBoard(BOARD_SIZE, BOARD_SIZE);
 }
 
 void Player::placeShipsManually() {
   const auto &shipList = ConfigLoader::getInstance().getShipList();
+
   for (const auto &ship : shipList) {
     int length = ship.second;
     std::string shipName = ship.first;
+    std::cout << "Placing " << shipName 
+      << " of length " << length << std::endl;
 
-    std::cout << "Placing " << shipName << " of length " << length << std::endl;
+    char choice;
+    std::cout << "Do you want to place this ship manually or randomly? (M/R): ";
+    std::cin >> choice;
 
-    bool validInput = false;
+    if (toupper(choice) == 'M') {
+      bool validInput = false;
+      while (!validInput) {
+        std::cout << "Enter starting row and column (e.g., A1): ";
+        char startRow;
+        int startCol;
+        if (!(std::cin >> startRow >> startCol)) {
+          std::cout << "Invalid input. Please try again." << std::endl;
+          std::cin.clear();
+          std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+          continue;
+        }
 
-    while (!validInput) {
-      std::cout << "Enter starting row and column (e.g., A 1): ";
-      char startRow;
-      int startCol;
+        int col = toupper(startRow) - 'A';
+        int row = startCol - 1; 
 
-      // Check if input is valid
-      if (!(std::cin >> startRow >> startCol)) {
-        std::cout << "Invalid input. Please try again." << std::endl;
-        std::cin.clear();  // Clear error flags
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  // Clear input buffer
-        continue;
+        std::cout << "Enter orientation (H for horizontal, V for vertical): ";
+        char orientation;
+        std::cin >> orientation;
+        bool horizontal = (toupper(orientation) == 'H');
+
+        if (Board::isValidCoordinate(row, col) && Board::isValidPlacement(row, col, length, horizontal, playerBoard)) {
+          Board::updateBoard(playerBoard, row, col, length, horizontal, shipName[0]);
+          validInput = true;
+          Board::printBoard(playerBoard);
+        } else {
+          std::cout << "Invalid placement. Please try again." << std::endl;
+          std::cin.clear();
+          std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        }
       }
+    } else if (toupper(choice) == 'R') {
+      placeShipRandomly(ship.first, ship.second);
+    } else {
+      std::cout << "Invalid choice. Ship will be placed randomly." << std::endl;
+      placeShipRandomly(ship.first, ship.second);
+    }
+  }
+}
 
-      // Convert row to index (e.g., A -> 0, B -> 1, etc.)
-      int row = std::toupper(startRow) - 'A';
-      int col = startCol - 1;
+void Player::placeShipRandomly(const std::string& shipName, int length) {
+  bool placed = false;
+  while (!placed) {
+    int row = std::rand() % BOARD_SIZE;
+    int col = std::rand() % BOARD_SIZE;
+    bool horizontal = std::rand() % 2 == 0;
 
-
-      // Ask the user for orientation
-      std::cout << "Enter orientation (H for horizontal, V for vertical): ";
-      char orientation;
-      std::cin >> orientation;
-
-      bool horizontal = (orientation == 'H' || orientation == 'h');
-
-      // Validate input
-      if (isValidCoordinate(col, row) && isValidPlacement(col, row, length, horizontal, playerBoard)) {
-        // Valid placement, update the board
-        updateBoard(playerBoard, col, row, length, horizontal, SHIP_CELL);
-        validInput = true;
-      } else {
-        std::cout << "Invalid placement. Please try again." << std::endl;
-        // Clear the input buffer in case of invalid input
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-      }
+    if (Board::isValidPlacement(row, col, length, horizontal, playerBoard)) {
+      Board::updateBoard(playerBoard, row, col, length, horizontal, shipName[0]);
+      placed = true;
+      Board::printBoard(playerBoard);
     }
   }
 }
 
 void Player::placeShipsRandomly() {
-  const auto &shipList = ConfigLoader::getInstance().getShipList();
+  const auto &shipList = 
+  ConfigLoader::getInstance().getShipList();
+
+  std::srand(std::time(0)); 
 
   for (const auto &ship : shipList) {
     std::string shipName = ship.first;
     int length = ship.second;
 
-    std::cout << "Placing " << shipName << " of length " << length
-              << " randomly." << std::endl;
+    std::cout << "Placing " << shipName 
+      << " of length " << length
+      << " randomly." << std::endl;
 
-    for (;;) {
-      int row = std::rand() % BOARD_SIZE;
-      int col = std::rand() % BOARD_SIZE;
-      // Randomly choose horizontal or vertical placement
-      bool horizontal = std::rand() % 2 == 0;
-
-      if (isValidPlacement(col, row, length, horizontal, playerBoard)) {
-        // Check for overlap with existing ships on the playerBoard
-        bool overlap = false;
-        if (horizontal) {
-          for (int j = col; j < col + length; ++j) {
-            if (playerBoard[row][j] == SHIP_CELL) {
-              overlap = true;
-              break;
-            }
-          }
-        } else {
-          for (int i = row; i < row + length; ++i) {
-            if (playerBoard[i][col] == SHIP_CELL) {
-              overlap = true;
-              break;
-            }
-          }
+    bool placed = false;
+      int attempts = 0;
+      while (!placed && attempts < 1000) { // We try a maximum of 1000 attempts per ship
+        int row = std::rand() % BOARD_SIZE;
+        int col = std::rand() % BOARD_SIZE;
+        bool horizontal = std::rand() % 2 == 0;
+        if (isValidPlacement(row, col, length, horizontal, playerBoard)) {
+          updateBoard(playerBoard, row, col, length, horizontal, shipName[0]);
+          placed = true;
         }
-
-        if (!overlap) {
-          // Valid placement, update the board
-          updateBoard(playerBoard, col, row, length, horizontal, SHIP_CELL);
-          break;
-        }
+        attempts++;
+      }
+      if (!placed) {
+        std::cerr << "Failed to place " << shipName << ". Try increasing the board size or reducing the number of ships." << std::endl;
+        exit(EXIT_FAILURE); // Exit the program if we couldn't place a ship
       }
     }
   }
-}
 
 void Player::updatePlayerBoard(int row, int col, bool &hit, bool &shipSunk) {
-  // Check if the computer's move hits a ship on the player's board
-  if (Board::playerBoard[row][col] == SHIP_CELL) {
+  for (const auto &ship : shipList) {
+  std::string shipName = ship.first;
+  }
+    // Check if the player's move hits a ship on the computer's board
+  if (computerPlayer.computerBoard[row][col] != EMPTY_CELL) {
     hit = true;
-    playerTargetBoard[row][col] =
-        HIT_CELL; // Mark the hit on the player's target board
-
-    // Check if the entire ship is sunk
+    playerTargetBoard[row][col] = HIT_CELL; 
     shipSunk = true;
-    char shipSymbol = playerBoard[col][row];
+   // Check if the entire ship is sunk
+    char shipSymbol = computerPlayer.computerBoard[row][col];
+
+    // Check if all parts of the ship are hit
     for (int i = 0; i < BOARD_SIZE; ++i) {
       for (int j = 0; j < BOARD_SIZE; ++j) {
-        if (Board::playerBoard[i][j] == shipSymbol &&
-            computerTargetBoard[i][j] != HIT_CELL) {
-          shipSunk = false;
-          break;
+        if (computerPlayer.computerBoard[i][j] == shipSymbol &&
+          playerTargetBoard[i][j] != HIT_CELL) {
+              shipSunk = false; 
+              break;
         }
       }
-      if (!shipSunk) {
-        break;
-      }
+       if (!shipSunk) { 
+          break;
+       }
     }
-
-    // If the ship is sunk, mark it on both player's and computer's target
-    // boards
     if (shipSunk) {
+// Mark all the segments of the no longer existent ship as hit
       for (int i = 0; i < BOARD_SIZE; ++i) {
         for (int j = 0; j < BOARD_SIZE; ++j) {
-          if (computerBoard[i][j] == shipSymbol) {
-            playerTargetBoard[i][j] = HIT_CELL;
+          if (computerPlayer.computerBoard[i][j] == shipSymbol){
+              playerTargetBoard[i][j] = HIT_CELL;
           }
         }
       }
-    } else {
-      // If the ship is not sunk, mark only on the player's target board
-      playerTargetBoard[row][col] = HIT_CELL;
     }
   } else {
-    hit = false;
-    playerTargetBoard[row][col] =
-        MISS_CELL; // Mark the miss on the player's target board
-  }
-  // Always mark the move on the player's target board, whether hit or miss
-  playerTargetBoard[row][col] = (hit) ? HIT_CELL : MISS_CELL;
+        hit = false;
+        playerTargetBoard[row][col] = MISS_CELL; // Mark the miss
+    }
 }
 
 void Player::playerTurn() {
@@ -169,16 +170,16 @@ void Player::playerTurn() {
     std::cin >> targetRow >> targetCol;
 
     // Convert row to index (e.g., A -> 0, B -> 1, etc.)
-    int row = static_cast<int>(targetRow) - static_cast<int>('A');
-    int col = targetCol - 1;
+    int col = toupper(targetRow) - 'A';
+    int row = targetCol - 1;
 
     // Validate input
-    if (isValidCoordinate(col, row) && isValidTarget(col, row)) {
+    if (isValidCoordinate(row, col) && isValidTarget(row, col)){
       // Valid target, update the player's board
-      updatePlayerBoard(col, row, hit, shipSunk);
+      updatePlayerBoard(row, col, hit, shipSunk);
       break;
     } else {
-      std::cout << "Invalid target. Please try again." << std::endl;
+      std::cout << "Invalid target. Please try again.\n";
       // Clear the input buffer in case of invalid input
       std::cin.clear();
       std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -198,8 +199,31 @@ void Player::playerTurn() {
   std::cout << std::endl;
 
   // Check if the player has won
-  if (checkWin()) {
-    std::cout << "Congratulations! You've sunk all enemy ships. You win!"
-              << std::endl;
+  if (checkWin(playerTargetBoard, computerPlayer.computerBoard)) {
+    std::cout 
+    << "Congratulations! You've sunk all enemy ships. You win!"
+    << std::endl;
   }
+}
+
+void Player::printBoards() const {
+  std::cout << "Player's Board:" << std::endl;
+  printBoard(playerBoard);
+  std::cout << std::endl;
+  std::cout << "Player's Target Board:" << std::endl;
+  printBoard(playerTargetBoard);
+}
+
+const std::vector<std::vector<char>>& Player::getPlayerBoard() const {
+  return playerBoard;
+}
+
+bool Player::isGameOver() {
+  // Verifying if all ships are sunk on either board
+  if (checkWin(playerTargetBoard, computerPlayer.computerBoard)) {
+    return true;
+  } else if (checkWin(computerPlayer.computerTargetBoard, playerBoard)) {
+    return true;
+  }
+  return false;
 }

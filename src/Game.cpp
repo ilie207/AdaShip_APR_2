@@ -6,26 +6,29 @@
 #include "../headers/Player.h"
 
 Game::Game() : configLoader(ConfigLoader::getInstance()) {
+  // Additional initialization for the Game class if needed
 }
 
 void Game::start() {
   Board board;
+  ComputerPlayer computer;
+  Player player(computer);
+  computer.setPlayer(&player);
+
   ConfigLoader::getInstance().loadConfig(board);
 
   const std::vector<std::pair<std::string, int>>& shipList = ConfigLoader::getInstance().getShipList();
 
 
-  std::cout << "Debug: shipList inside game file:" << std::endl;
+  std::cout << "Welcome to Battleship Game!\n" << std::endl;
+  std::cout << "Ship list:" << std::endl;
   for (const auto &ship : shipList) {
-    std::cout << "Ship Name: " << ship.first << ", Length: " << ship.second
-              << std::endl;
+    std::cout << "Ship Name: " << ship.first 
+      << "Length: " << ship.second << std::endl;
   }
 
-  Player player;
-  ComputerPlayer computer;
 
-  std::cout << "Welcome to Battleship Game!" << std::endl;
-  std::cout << "Please chose one of the options:" << std::endl;
+  std::cout << "\nPlease chose one of the options:\n";
   std::cout << "1. Player v Computer." << std::endl;
   std::cout << "2. Exit Game." << std::endl;
   int option;
@@ -34,32 +37,46 @@ void Game::start() {
   switch (option) {
   case 1:
     // Prompt the player to place ships manually or randomly
-    std::cout << "Do you want to place ships manually or randomly? (M/R): ";
+    std::cout << "\nDo you want to place ships manually or randomly? (M/R): ";
     char choice;
     std::cin >> choice;
 
-    if (toupper(choice) == 'M' || toupper(choice) == 'm') {
+    if (toupper(choice) == 'M' || 
+      toupper(choice) == 'm') {
       player.placeShipsManually();
-    } else if (toupper(choice) == 'R' || toupper(choice) == 'r') {
+    } else if (toupper(choice) == 'R' ||
+      toupper(choice) == 'r') {
       player.placeShipsRandomly();
     } else {
-      std::cout << "Invalid choice. Please try again." << std::endl;
+      std::cout << "Invalid choice. Please try again." 
+        << std::endl;
     }
 
     std::cout << "\nComputer is placing its ships on the board...\n";
     computer.placeComputerShipsRandomly();
+
     // Main game loop
-    while (!board.isGameOver()) {
-      board.printBoards();
+    while (!player.isGameOver()) {
+      player.printBoards();
+      computer.printBoards();
       player.playerTurn();
-      if (!board.isGameOver()) { // Check if the game is still not over before
-                                 // the computer's turn
+      if (!player.isGameOver()) {
         computer.computerTurn();
       }
     }
-
     // Display the final result
-    board.printBoards();
+    player.printBoards();
+    computer.printBoards();
+
+    if (computer.checkWin(computer.computerTargetBoard,
+      player.getPlayerBoard())) {
+      std::cout << "Computer has sunk all your ships. You lose!"
+        << std::endl;
+    } else if (player.checkWin(player.playerTargetBoard,
+      computer.computerBoard)) {
+      std::cout << "Congratulations! You've sunk all enemy ships. You win!" 
+        << std::endl;
+    }
     std::cout << "Game Over!" << std::endl;
     break;
 
@@ -72,8 +89,4 @@ void Game::start() {
     std::cout << "Invalid choice. Please try again." << std::endl;
     break;
   }
-
-  // Display the final result
-  board.printBoards();
-  std::cout << "Game Over!" << std::endl;
 }
