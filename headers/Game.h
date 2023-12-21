@@ -2,7 +2,7 @@
 #define GAME_H
 
 #include "Board.h"
-#include "ConifgLoader.h"
+#include "ConfigLoader.h"
 #include "ComputerPlayer.h"
 #include "Player.h"
 
