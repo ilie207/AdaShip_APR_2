@@ -25,45 +25,61 @@ void Player::placeShipsManually() {
       << " of length " << length << std::endl;
 
     char choice;
-    std::cout << "Do you want to place this ship manually or randomly? (M/R): ";
-    std::cin >> choice;
+    bool validChoice = false;
+    while (!validChoice) {
+      std::cout << "Do you want to place this ship manually or randomly? (M/R): ";
+      std::cin >> choice;
 
-    if (toupper(choice) == 'M') {
-      bool validInput = false;
-      while (!validInput) {
-        std::cout << "Enter starting row and column (e.g., A1): ";
-        char startRow;
-        int startCol;
-        if (!(std::cin >> startRow >> startCol)) {
-          std::cout << "Invalid input. Please try again." << std::endl;
-          std::cin.clear();
-          std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-          continue;
+      if (toupper(choice) == 'M') {
+        validChoice = true;
+        bool validInput = false;
+        while (!validInput) {
+          std::cout << "Enter starting row and column (e.g., A1): ";
+          char startRow;
+          int startCol;
+          if (!(std::cin >> startRow >> startCol)) {
+            std::cout << "Invalid input. Please try again." << std::endl;
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            continue;
+          }
+
+          int col = toupper(startRow) - 'A';
+          int row = startCol - 1; 
+
+          char orientation;
+          bool horizontal;
+          std::cout << "Enter orientation (H for horizontal, V for vertical): ";
+          std::cin >> orientation;
+
+          if (std::cin.fail() || (toupper(orientation) != 'H' && toupper(orientation) != 'V')) {
+            std::cout << "Invalid input. Please enter 'H' for horizontal or 'V' for vertical." << std::endl;
+            std::cin.clear();
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+            continue;
+          }
+
+          horizontal = (toupper(orientation) == 'H');
+
+          if (Board::isValidCoordinate(row, col) && Board::isValidPlacement(row, col, length, horizontal, playerBoard)) {
+            Board::updateBoard(playerBoard, row, col, length, horizontal, shipName[0]);
+            validInput = true;
+            Board::printBoard(playerBoard);
+          } else {
+            std::cout << "Invalid placement. Please try again." << std::endl;
+            // No need to clear or ignore here since the input stream is in a good state
+          }
         }
-
-        int col = toupper(startRow) - 'A';
-        int row = startCol - 1; 
-
-        std::cout << "Enter orientation (H for horizontal, V for vertical): ";
-        char orientation;
-        std::cin >> orientation;
-        bool horizontal = (toupper(orientation) == 'H');
-
-        if (Board::isValidCoordinate(row, col) && Board::isValidPlacement(row, col, length, horizontal, playerBoard)) {
-          Board::updateBoard(playerBoard, row, col, length, horizontal, shipName[0]);
-          validInput = true;
-          Board::printBoard(playerBoard);
-        } else {
-          std::cout << "Invalid placement. Please try again." << std::endl;
-          std::cin.clear();
-          std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        }
+      } else if (toupper(choice) == 'R') {
+        validChoice = true;
+        placeShipRandomly(ship.first, ship.second);
+      } else {
+        std::cout << "Invalid choice. Please try again." << std::endl;
+        // Clear the input buffer to handle the next input correctly
+        std::cin.clear();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        // Do not update validChoice to stay in the loop
       }
-    } else if (toupper(choice) == 'R') {
-      placeShipRandomly(ship.first, ship.second);
-    } else {
-      std::cout << "Invalid choice. Ship will be placed randomly." << std::endl;
-      placeShipRandomly(ship.first, ship.second);
     }
   }
 }
@@ -111,7 +127,8 @@ void Player::placeShipsRandomly() {
       }
       if (!placed) {
         std::cerr << "Failed to place " << shipName << ". Try increasing the board size or reducing the number of ships." << std::endl;
-        exit(EXIT_FAILURE); // Exit the program if we couldn't place a ship
+         // Exit the program if we couldn't place a ship
+        exit(EXIT_FAILURE);
       }
     }
   }

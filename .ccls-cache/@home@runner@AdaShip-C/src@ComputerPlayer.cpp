@@ -77,9 +77,9 @@ void ComputerPlayer::computerTurn() {
       << std::endl;
   }
   // Require user interaction to end the computer's turn
-  std::cout << "Press Enter to continue...";
+  /*std::cout << "Press Enter to continue...";
   std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');*/
 }
 
 

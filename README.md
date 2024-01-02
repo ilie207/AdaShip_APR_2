@@ -1,5 +1,40 @@
-# AdvanceProgramming_wk2
-This is an advanced program created with C++ for the advanced programming module week 2.
+# AdaShip_APR_2 Project
+This is AdaShip game, a reperesentation of the classical Battleship game,  created with C++ for the advanced programming module week 2.
+
+# Getting Started:
+This code can easily be setup and run with the use replit web based compiler, (I haven't personally setup and run the game in VS Code) however it should be possible to run it with Visual Studio Code locally too, as long as C++ compiler is installed loacally as well as the .run extension for VS Code in order to run the code.
+
+## Prerequisites:
+### For VS Code loacally:
+1. MinGW-w64 C++ code compiler installed.
+2. .run VS Code Extension installed.
+3. C/C++ Extension Pack for VS Code installed.
+
+### For Replit:
+1. Access to internet and Replit web compiler.
+
+## Running the code on VS Code:
+1. Download or clone this repository.
+2. Open folder in VS Code.
+3. Make sure to have all the necessary prerequisites installed.
+4. Run game using play symbol on the top-right side of VS Code window.
+
+## Running the code with Replit
+1. Download or clone this repository using the "Shell" tab avaialable on Replit.
+2. Make sure you have .ini file with available data for the game.
+(e.g.
+Board: 10x10
+Boat: Carrier, 5
+Boat: Battleship, 4
+Boat: Destroyer, 3
+Boat: Submarine, 3
+Boat: PatrolBoat, 2
+)
+3. Run the game using the incorporated "Run" button available in Replit. 
+
+
+# The Game Rules:
+---------->
 
 # 1. Challenge Outline
 ## a. Summary and Review

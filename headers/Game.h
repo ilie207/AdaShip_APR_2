@@ -10,6 +10,10 @@ class Game{
 public:
   Game();
   void start();
+  void showWinner();
+  void resetGame();
+  void quitGame();
+  void clearShipList();
 
 private:
 ConfigLoader configLoader;

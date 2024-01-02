@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <iostream>
 
+
 void Board::initializeBoard(int rows, int cols) {
 
   playerBoard.resize(rows, std::vector<char>(cols, EMPTY_CELL));
@@ -21,48 +22,7 @@ char getShipSymbolFromName(const std::string &name) {
 }
 
 void Board::printBoards() const {
-/*  // Print player's board
-  std::cout << "Player's Board:" << std::endl;
-  printBoard(playerBoard);
-
-  std::cout << std::endl;
-
-  // Print player's target board
-  std::cout << "Player's Target Board:" << std::endl;
-  printBoard(playerTargetBoard);
-
-  std::cout << std::endl;
-
-  // Print computer's target board
-  std::cout << "Computer's Target Board:" << std::endl;
-  printBoard(computerTargetBoard);
-
-  std::cout << std::endl;
-
-  // Print computer's board without revealing the ships (not shown to the player)
-  std::cout << "Computer's Board:" << std::endl;
-
-  // Display column letters for computer's board
-  std::cout << "   ";
-  for (int i = 0; i < BOARD_SIZE; ++i) {
-    char colLetter = static_cast<char>('A' + i);
-    std::cout << colLetter << " ";
-  }
-  std::cout << std::endl;
-
-  for (int i = 0; i < BOARD_SIZE; ++i) {
-    std::cout << std::setw(2) << i + 1 << " ";
-    for (int j = 0; j < BOARD_SIZE; ++j) {
-      char cellValue = computerBoard[i][j];
-      if (cellValue == SHIP_CELL) {  // Hide the actual SHIP_CELLs when displaying the computer's board
-        std::cout << EMPTY_CELL << " ";
-      } else {
-        std::cout << cellValue << " ";  // Display hits and misses
-      }
-    }
-    std::cout << std::endl;
-  }
-  std::cout << std::endl; */
+  
 }
 
 void Board::printBoard(const std::vector<std::vector<char>>& board) const {
@@ -157,4 +117,20 @@ bool Board::checkWin(const std::vector<std::vector<char>>& targetBoard, const st
   }
   // If all ship parts on the reference board have been hit on the target board, return true
   return true;
+}
+
+void Board::resetBoards() {
+  for (auto& row : playerBoard) {
+    std::fill(row.begin(), row.end(), EMPTY_CELL);
+  }
+  for (auto& row : playerTargetBoard) {
+    std::fill(row.begin(), row.end(), EMPTY_CELL);
+  }
+
+  for (auto& row : computerBoard) {
+    std::fill(row.begin(), row.end(), EMPTY_CELL);
+  }
+  for (auto& row : computerTargetBoard) {
+    std::fill(row.begin(), row.end(), EMPTY_CELL);
+  }
 }
