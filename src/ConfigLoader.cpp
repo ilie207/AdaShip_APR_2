@@ -63,3 +63,7 @@ ConfigLoader::getShipList() const {
 std::pair<int, int> ConfigLoader::getBoardSize() const {
   return boardSize;
 }
+
+void ConfigLoader::clearShipList() {
+    shipList.clear();
+}

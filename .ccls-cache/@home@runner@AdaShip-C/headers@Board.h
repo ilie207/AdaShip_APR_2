@@ -20,8 +20,8 @@ public:
   bool isValidPlacement(int row, int col, int length, 
   bool horizontal, const std::vector<std::vector
   <char>> &board);
-  void updateBoard(std::vector<std::vector<char>> &board,
-  int row, int col, int length, bool horizontal, char symbol);
+  void updateBoard(std::vector<std::vector<char>> &board, int row, int col, int length, bool horizontal, char symbol);
+  void resetBoards();
 
   std::vector<std::pair<std::string, int>> shipList;
   std::vector<std::vector<char>> playerBoard;
