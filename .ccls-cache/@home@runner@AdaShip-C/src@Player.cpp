@@ -12,17 +12,21 @@
 
 Player::Player(ComputerPlayer& computerPlayer)
     : computerPlayer(computerPlayer) {
-      initializeBoard(BOARD_SIZE, BOARD_SIZE);
+      auto boardSize = ConfigLoader::getInstance().getBoardSize();
+        initializeBoard(boardSize.first, boardSize.second);
 }
 
 void Player::placeShipsManually() {
   const auto &shipList = ConfigLoader::getInstance().getShipList();
+
+  const auto boardSize = ConfigLoader::getInstance().getBoardSize();
 
   for (const auto &ship : shipList) {
     int length = ship.second;
     std::string shipName = ship.first;
     std::cout << "Placing " << shipName 
       << " of length " << length << std::endl;
+
 
     char choice;
     bool validChoice = false;
@@ -61,13 +65,12 @@ void Player::placeShipsManually() {
 
           horizontal = (toupper(orientation) == 'H');
 
-          if (Board::isValidCoordinate(row, col) && Board::isValidPlacement(row, col, length, horizontal, playerBoard)) {
+          if (Board::isValidCoordinate(row, col, boardSize) && Board::isValidPlacement(row, col, length, horizontal, playerBoard, boardSize)) {
             Board::updateBoard(playerBoard, row, col, length, horizontal, shipName[0]);
             validInput = true;
-            Board::printBoard(playerBoard);
+            Board::printBoard(playerBoard, boardSize);
           } else {
             std::cout << "Invalid placement. Please try again." << std::endl;
-            // No need to clear or ignore here since the input stream is in a good state
           }
         }
       } else if (toupper(choice) == 'R') {
@@ -78,23 +81,27 @@ void Player::placeShipsManually() {
         // Clear the input buffer to handle the next input correctly
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        // Do not update validChoice to stay in the loop
       }
     }
   }
 }
 
 void Player::placeShipRandomly(const std::string& shipName, int length) {
+  
+  const auto boardSize = ConfigLoader::getInstance().getBoardSize();
+  const int rows = boardSize.first;
+  const int cols = boardSize.second;
+  
   bool placed = false;
   while (!placed) {
-    int row = std::rand() % BOARD_SIZE;
-    int col = std::rand() % BOARD_SIZE;
+    int row = std::rand() % rows;
+    int col = std::rand() % cols;
     bool horizontal = std::rand() % 2 == 0;
 
-    if (Board::isValidPlacement(row, col, length, horizontal, playerBoard)) {
+    if (Board::isValidPlacement(row, col, length, horizontal, playerBoard, boardSize)) {
       Board::updateBoard(playerBoard, row, col, length, horizontal, shipName[0]);
       placed = true;
-      Board::printBoard(playerBoard);
+      Board::printBoard(playerBoard, boardSize);
     }
   }
 }
@@ -105,9 +112,17 @@ void Player::placeShipsRandomly() {
 
   std::srand(std::time(0)); 
 
+  const auto boardSize = ConfigLoader::getInstance().getBoardSize();
+  const int rows = boardSize.first;
+  const int cols = boardSize.second;
+
   for (const auto &ship : shipList) {
     std::string shipName = ship.first;
     int length = ship.second;
+
+    std::cout << "Board size (rows x cols): " << boardSize.first << " x " << boardSize.second << std::endl;
+    std::cout << "Initializing player's board...\n";
+    printBoards();
 
     std::cout << "Placing " << shipName 
       << " of length " << length
@@ -115,11 +130,11 @@ void Player::placeShipsRandomly() {
 
     bool placed = false;
       int attempts = 0;
-      while (!placed && attempts < 1000) { // We try a maximum of 1000 attempts per ship
-        int row = std::rand() % BOARD_SIZE;
-        int col = std::rand() % BOARD_SIZE;
+      while (!placed && attempts < 1000) { // A maximum of 1000 attempts per ship
+        int row = std::rand() % rows;
+        int col = std::rand() % cols;
         bool horizontal = std::rand() % 2 == 0;
-        if (isValidPlacement(row, col, length, horizontal, playerBoard)) {
+        if (isValidPlacement(row, col, length, horizontal, playerBoard, boardSize)) {
           updateBoard(playerBoard, row, col, length, horizontal, shipName[0]);
           placed = true;
         }
@@ -137,6 +152,11 @@ void Player::updatePlayerBoard(int row, int col, bool &hit, bool &shipSunk) {
   for (const auto &ship : shipList) {
   std::string shipName = ship.first;
   }
+
+  const auto boardSize = ConfigLoader::getInstance().getBoardSize();
+  const int rows = boardSize.first;
+  const int cols = boardSize.second;
+  
     // Check if the player's move hits a ship on the computer's board
   if (computerPlayer.computerBoard[row][col] != EMPTY_CELL) {
     hit = true;
@@ -146,22 +166,23 @@ void Player::updatePlayerBoard(int row, int col, bool &hit, bool &shipSunk) {
     char shipSymbol = computerPlayer.computerBoard[row][col];
 
     // Check if all parts of the ship are hit
-    for (int i = 0; i < BOARD_SIZE; ++i) {
-      for (int j = 0; j < BOARD_SIZE; ++j) {
-        if (computerPlayer.computerBoard[i][j] == shipSymbol &&
-          playerTargetBoard[i][j] != HIT_CELL) {
-              shipSunk = false; 
-              break;
-        }
+  for (int i = 0; i < rows; ++i) {
+    for (int j = 0; j < cols; ++j) {
+      if (
+        computerPlayer.computerBoard[i][j] == shipSymbol &&
+        playerTargetBoard[i][j] != HIT_CELL) {
+           shipSunk = false; 
+           break;
       }
+    }
        if (!shipSunk) { 
           break;
        }
     }
     if (shipSunk) {
 // Mark all the segments of the no longer existent ship as hit
-      for (int i = 0; i < BOARD_SIZE; ++i) {
-        for (int j = 0; j < BOARD_SIZE; ++j) {
+      for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
           if (computerPlayer.computerBoard[i][j] == shipSymbol){
               playerTargetBoard[i][j] = HIT_CELL;
           }
@@ -178,6 +199,8 @@ void Player::playerTurn() {
   bool hit = false;
   bool shipSunk = false;
 
+  const auto boardSize = ConfigLoader::getInstance().getBoardSize();
+
   std::cout << "Player's Turn" << std::endl;
 
   for (;;) {
@@ -191,7 +214,7 @@ void Player::playerTurn() {
     int row = targetCol - 1;
 
     // Validate input
-    if (isValidCoordinate(row, col) && isValidTarget(row, col)){
+    if (isValidCoordinate(row, col, boardSize) && isValidTarget(row, col, computerBoard, boardSize)){
       // Valid target, update the player's board
       updatePlayerBoard(row, col, hit, shipSunk);
       break;
@@ -216,7 +239,7 @@ void Player::playerTurn() {
   std::cout << std::endl;
 
   // Check if the player has won
-  if (checkWin(playerTargetBoard, computerPlayer.computerBoard)) {
+  if (checkWin(playerTargetBoard, computerPlayer.computerBoard, boardSize)) {
     std::cout 
     << "Congratulations! You've sunk all enemy ships. You win!"
     << std::endl;
@@ -224,11 +247,12 @@ void Player::playerTurn() {
 }
 
 void Player::printBoards() const {
+  auto boardSize = ConfigLoader::getInstance().getBoardSize();
   std::cout << "Player's Board:" << std::endl;
-  printBoard(playerBoard);
+  printBoard(playerBoard, boardSize);
   std::cout << std::endl;
   std::cout << "Player's Target Board:" << std::endl;
-  printBoard(playerTargetBoard);
+  printBoard(playerTargetBoard, boardSize);
 }
 
 const std::vector<std::vector<char>>& Player::getPlayerBoard() const {
@@ -236,10 +260,11 @@ const std::vector<std::vector<char>>& Player::getPlayerBoard() const {
 }
 
 bool Player::isGameOver() {
+  auto boardSize = ConfigLoader::getInstance().getBoardSize();
   // Verifying if all ships are sunk on either board
-  if (checkWin(playerTargetBoard, computerPlayer.computerBoard)) {
+  if (checkWin(playerTargetBoard, computerPlayer.computerBoard, boardSize)) {
     return true;
-  } else if (checkWin(computerPlayer.computerTargetBoard, playerBoard)) {
+  } else if (checkWin(computerPlayer.computerTargetBoard, playerBoard, boardSize)) {
     return true;
   }
   return false;

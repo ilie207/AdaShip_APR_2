@@ -17,6 +17,9 @@ public:
 
 private:
 ConfigLoader configLoader;
+Board board;
+ComputerPlayer computer;
+Player player; 
 };
 
 #endif
