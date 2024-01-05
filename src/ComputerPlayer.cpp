@@ -79,16 +79,6 @@ void ComputerPlayer::computerTurn() {
   }
 
   std::cout << std::endl;
-
-  // Check if the computer has won
-  if (checkWin(computerTargetBoard, player->playerBoard, boardSize)) {
-    std::cout << "Computer has sunk all your ships. You lose!"
-      << std::endl;
-  }
-  // Require user interaction to end the computer's turn
-  /*std::cout << "Press Enter to continue...";
-  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');*/
 }
 
 
@@ -124,7 +114,7 @@ void ComputerPlayer::updateComputerBoard(int row, int col, bool &hit, bool &ship
       for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
           if (player->getPlayerBoard()[i][j] == shipSymbol) {
-            computerTargetBoard[i][j] = HIT_CELL;
+            computerTargetBoard[i][j] = SHIP_SUNK;
           }
         }
       }

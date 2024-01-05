@@ -120,10 +120,6 @@ void Player::placeShipsRandomly() {
     std::string shipName = ship.first;
     int length = ship.second;
 
-    std::cout << "Board size (rows x cols): " << boardSize.first << " x " << boardSize.second << std::endl;
-    std::cout << "Initializing player's board...\n";
-    printBoards();
-
     std::cout << "Placing " << shipName 
       << " of length " << length
       << " randomly." << std::endl;
@@ -184,7 +180,7 @@ void Player::updatePlayerBoard(int row, int col, bool &hit, bool &shipSunk) {
       for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
           if (computerPlayer.computerBoard[i][j] == shipSymbol){
-              playerTargetBoard[i][j] = HIT_CELL;
+              playerTargetBoard[i][j] = SHIP_SUNK;
           }
         }
       }
@@ -237,13 +233,6 @@ void Player::playerTurn() {
   }
 
   std::cout << std::endl;
-
-  // Check if the player has won
-  if (checkWin(playerTargetBoard, computerPlayer.computerBoard, boardSize)) {
-    std::cout 
-    << "Congratulations! You've sunk all enemy ships. You win!"
-    << std::endl;
-  }
 }
 
 void Player::printBoards() const {

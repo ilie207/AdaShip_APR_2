@@ -7,12 +7,13 @@
 const char EMPTY_CELL = '.';
 const char HIT_CELL = 'X';
 const char MISS_CELL = 'O';
+const char SHIP_SUNK = 'S';
 
 class Board {
 public:
   virtual void printBoards() const;
-  void printBoard
-  (const std::vector<std::vector<char>>& board,
+
+  void printBoard(const std::vector<std::vector<char>>& board,
   std::pair<int, int> boardSize) const;
   
   bool isValidCoordinate(int row, int col, 

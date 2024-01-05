@@ -47,7 +47,7 @@ The challenge was making a digital console based version of the vintage Battlesh
 - Handling user input and providing appropriate validation to prevent incorrect or illegal moves.
 
 ## b. UML Style Diagram
-Include a UML-style diagram illustrating the initial overall solution. Use class diagrams, sequence diagrams, or any relevant diagrams to visually represent your system's architecture.
+UML-style diagram illustrating use class diagrams: https://miro.com/app/board/uXjVPS7BUOs=/?share_link_id=673762670910
 
 ## c. Initial Working Plan
 Overall Approach to Development:

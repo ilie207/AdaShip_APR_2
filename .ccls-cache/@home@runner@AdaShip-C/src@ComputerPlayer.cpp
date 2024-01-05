@@ -139,9 +139,9 @@ void ComputerPlayer::updateComputerBoard(int row, int col, bool &hit, bool &ship
 
 void ComputerPlayer::printBoards() const {
   auto boardSize = ConfigLoader::getInstance().getBoardSize();
-  std::cout << "Computer's Board:" << std::endl;
-  printBoard(computerBoard, boardSize);
-  std::cout << std::endl;
+  //std::cout << "Computer's Board:" << std::endl;
+  //printBoard(computerBoard, boardSize);
+  //std::cout << std::endl;
   std::cout << "Computer's Target Board:" << std::endl;
   printBoard(computerTargetBoard, boardSize);
 }

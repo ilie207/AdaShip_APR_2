@@ -14,6 +14,9 @@ public:
   void resetGame();
   void quitGame();
   void clearShipList();
+  void playPlayerVsComputer();
+  char getInputChar(const std::string &prompt);
+  void promptShipPlacement();
 
 private:
 ConfigLoader configLoader;

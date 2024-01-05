@@ -120,10 +120,6 @@ void Player::placeShipsRandomly() {
     std::string shipName = ship.first;
     int length = ship.second;
 
-    std::cout << "Board size (rows x cols): " << boardSize.first << " x " << boardSize.second << std::endl;
-    std::cout << "Initializing player's board...\n";
-    printBoards();
-
     std::cout << "Placing " << shipName 
       << " of length " << length
       << " randomly." << std::endl;

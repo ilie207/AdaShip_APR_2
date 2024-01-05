@@ -34,6 +34,9 @@ void Game::start() {
       << " Length: " << ship.second << std::endl;
   }
 
+  player.printBoards();
+  computer.printBoards();
+
   std::cout << "\nPlease chose one of the options:\n";
   std::cout << "1. Player v Computer." << std::endl;
   std::cout << "2. Exit Game." << std::endl;
@@ -137,7 +140,7 @@ void Game::resetGame() {
   ConfigLoader::getInstance().clearShipList();
 
    // Get the current board size from the ConfigLoader
-std::pair<int, int> boardSize = configLoader.getBoardSize();
+std::pair<int, int> boardSize = ConfigLoader::getInstance().getBoardSize();
 
   // Verify if shipList is actually cleared
   if (configLoader.getShipList().empty()) {
@@ -151,7 +154,7 @@ std::pair<int, int> boardSize = configLoader.getBoardSize();
   computer.resetBoards(boardSize);
   
   // Reload the configuration to repopulate the shipList
-  configLoader.loadConfig(board);
+  ConfigLoader::getInstance().loadConfig(board);
 
   std::cout << "Game has been reset. Starting a new game...\n" << std::endl;
   start(); // Reinitialize the game setup

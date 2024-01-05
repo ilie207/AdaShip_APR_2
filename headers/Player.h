@@ -10,8 +10,7 @@ class ComputerPlayer;
 
 class Player : public Board{
 
-public:
- std::vector<std::pair<std::string, int>> shipList;  
+public:  
   explicit Player(ComputerPlayer& computerPlayer);
 
   void placeShipsManually();
@@ -21,10 +20,10 @@ public:
   void playerTurn();
   void printBoards() const override;
   const std::vector<std::vector<char>>& getPlayerBoard() const; 
-bool isGameOver();
+  bool isGameOver();
 
 
 private:
-ComputerPlayer& computerPlayer; 
+  ComputerPlayer& computerPlayer; 
 };
 #endif
