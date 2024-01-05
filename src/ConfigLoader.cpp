@@ -1,5 +1,6 @@
 #include "../headers/ConfigLoader.h"
 #include "../headers/Board.h"
+
 #include <fstream>
 #include <iostream>
 #include <sstream>

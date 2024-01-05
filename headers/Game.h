@@ -14,9 +14,14 @@ public:
   void resetGame();
   void quitGame();
   void clearShipList();
+  void shipPlacement();
+  void playerVsComputer();
 
 private:
 ConfigLoader configLoader;
+Board board;
+ComputerPlayer computer;
+Player player; 
 };
 
 #endif
