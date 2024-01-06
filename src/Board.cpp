@@ -21,6 +21,7 @@ char getShipSymbolFromName(const std::string &name) {
   return name[0];
 }
 
+
 void Board::printBoards() const {
   
 }
@@ -112,7 +113,8 @@ bool Board::checkWin(const std::vector<std::vector<char>>& targetBoard, const st
       if (referenceBoard[row][col] != EMPTY_CELL &&
           referenceBoard[row][col] != HIT_CELL &&
           referenceBoard[row][col] != MISS_CELL &&
-          targetBoard[row][col] != HIT_CELL) {
+          targetBoard[row][col] != HIT_CELL && 
+          targetBoard[row][col] != SHIP_SUNK) {
         return false;
       }
     }

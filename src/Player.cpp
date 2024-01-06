@@ -138,7 +138,7 @@ void Player::placeShipsRandomly() {
       }
       if (!placed) {
         std::cerr << "Failed to place " << shipName << ". Try increasing the board size or reducing the number of ships." << std::endl;
-         // Exit the program if we couldn't place a ship
+         // Exit the program if ship couldn't be placed
         exit(EXIT_FAILURE);
       }
     }
@@ -200,7 +200,7 @@ void Player::playerTurn() {
   std::cout << "Player's Turn" << std::endl;
 
   for (;;) {
-    std::cout << "Enter target row and column (e.g., A 1): ";
+    std::cout << "Enter target row and column (e.g., A1) to fire a torpedo 💣: ";
     char targetRow;
     int targetCol;
     std::cin >> targetRow >> targetCol;

@@ -1,6 +1,4 @@
 #include <iostream>
-
-//#include "../headers/ComputerPlayer.h"
 #include "../headers/Game.h"
 
 int main() {

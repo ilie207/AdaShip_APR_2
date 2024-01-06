@@ -47,7 +47,9 @@ The challenge was making a digital console based version of the vintage Battlesh
 - Handling user input and providing appropriate validation to prevent incorrect or illegal moves.
 
 ## b. UML Style Diagram
-UML-style diagram illustrating use class diagrams: https://miro.com/app/board/uXjVPS7BUOs=/?share_link_id=673762670910
+UML-style diagram illustrating use class diagrams: https://miro.com/app/board/uXjVN9WyO3w=/?share_link_id=979256034582
+
+
 
 ## c. Initial Working Plan
 Overall Approach to Development:
@@ -262,15 +264,122 @@ These design challenges were addressed through careful planning, iterative devel
 # 3. Evaluation
 ## a. Code Refactoring, Reuse, Smells
 Analyze instances of code refactoring, code reuse, and identification/remediation of code smells. Use specific code snippets to illustrate your points.
+Throughout the development of the game I have tried to look for ways to reduce code duplicated and reuse the code through inheritance, and encapsulation to make the code more maintainable. To reduce code smells, however I was not able to fully mitigate that as there still are a few functions that are longer than usual coding standards, but I have tried to remediate that by using concise comments to explain the more complex parts of the code. An example of inheritance is with the Player and ComputerPlayer classes which both are using the member functions of the Board class this helped with the code smells and can be seen in the following code snippets:
+<img src="images/board_class.png">
+
+*Board class code snippet*
+
+<img src="images/computerPlayer.png">
+
+*Use of Board class member functions inside ComputerPlayer.cpp*
+
+<img src="images/player.png">
+
+*Use of Board class member functions inside Player.cpp*
+
+#### An example of encapsulation:
+Instances of the Board, ComputerPlayer, Player, ConfigLoader, and Board classes are encapsulated in the Game class. Composition, in which objects of one class contain those of another class, is how this is achieved. The Game class contains all of these classes' internal features and functions.
+<img src="images/game_class.png">
 
 ## b. Effective Use of 'Advanced' Programming Principles
-Highlight your effective use of advanced programming principles (e.g., SOLID principles, design patterns) with concrete examples from your codebase.
+## SOLID Principles:
+
+### 1. Single Responsibility Principle (SRP):
+Within the game that I have developed Board class has the responsibility of managing the game board and related functionalities. I ensured it doesn't handle game logic; that's the responsibility of other classes such as: Player, ComputerPlayer and Game.
+<img src="images/board_class.png">
+
+### 2. Open/Closed Principle (OCP):
+I ensured that the design allows for extending the game with new features (e.g., ship variations, board size) without modifying existing code. The ConfigLoader class supports dynamic loading of configurations, contributing to the open/closed principle.
+<img src="images/configLoader_class.png">
+
+### 3. Liskov Substitution Principle (LSP):
+To avoid code duplication Player and ComputerPlayer are derived from Board, and they can be used interchangeably with objects of the base class. Because Player and ComputerPlayer are subclasses of Board, either one of these subclasses can be used in place of the other whenever a Board object is required. This compliance to LSP guarantees that the program's correctness won't be compromised by replacing a Board object with a Player or ComputerPlayer object.
+
+### 4. Interface Segregation Principle (ISP):
+Within the game printBoards() function is a virtual function provided by the Board class. Based on particular requirements, derived classes (Player and ComputerPlayer), implement this function. ISP permits Player and ComputerPlayer to use only the techniques necessary for printing their respective boards.
+
+### 5. Dependency Inversion Principle (DIP):
+ComputerPlayer depends on the Player interface, which is a high-level module. Instead of relying on concrete implementations, ComputerPlayer depends on the abstraction provided by the Player interface. An instance of Player is injected into ComputerPlayer through dependency injection. This allows ComputerPlayer to interact with any object that adheres to the Player interface. This inversion of dependencies enhances flexibility and promotes a more modular and maintainable design.
 
 ## c. Features Showcase and Embedded Innovations
-Showcase notable features and innovations within your project. Use examples to highlight the most significant aspects of your implementation.
+
+### 1. Object-Oriented Design for Scalability:
+Innovation:
+A well-structured object-oriented design, supporting scalability and extensibility.
+
+Example:
+ConfigLoader, Board, Game, Player, and ComputerPlayer are the initial classes in the class hierarchy. This design made it possible to divide the work into manageable chunks as it was being developed, and makes it easier to add on more features or new classes for a playerVplayer game.
+
+### 2. Dynamic Board Size and Ship Variations:
+Innovation:
+Design for different board sizes and ship variations.
+
+Example:
+I took in consideration scalability and extensibility in the phased breakdown, which indicates a forward-looking design to accommodate various game configurations, as well as having a more diverse game to accomodate different user preferences.
+
+### 3. Input Validation and Board State Management:
+Innovation:
+The program has a robust input validation mechanisms to ensure the integrity of user input and effective management of the game state. 
+
+Examples:
+Before placing ships, the game prompts the player to choose between manual or random placement. Validates the user's choice to ensure it's either 'M' for manual or 'R' for random. If the choice is invalid, the game asks the user to try again, contributing to a more user-friendly interface. 
+The same thing is applied throughout the game like player's turn, the game validates input for shooting coordinates. Checks if the entered coordinates are within the valid range on the game board. Ensures the user doesn't input invalid or duplicate coordinates, preventing unintended actions.
 
 ## d. Improved Algorithms
-Discuss how you researched, designed, implemented, and tested improved algorithms. Provide examples to demonstrate the effectiveness of these improvements.
+### Research, Design, Implementation, and Testing of Improved Algorithms in the Battleship Game:
+
+### Research:
+I conducted research before the Battleship game was being developed, as well as during the development in order to improve gameplay's effectiveness and fairness. This required looking at algorithms for win/lose condition checks, computer player decision-making, ship positioning, and I also used my previous knowledge of reading data from a different file, which was required for the config file. In addition to that I had to understand the requirements available within the assignment document to understand each feature and what it represented.
+
+### Design:
+#### 1. Improved Ship Placement Algorithm:
+* Research Findings: Researched and implemented a ship placement algorithm that ensures a fair and balanced distribution of ships on the board.
+* Design Approach: The algorithm considers factors like random coordinates and random orientation for each ship, also ensuring there are enough attempts to ensure that the ships are not clashing with one another.
+* Example: In the placeComputerShipsRandomly() method of the ComputerPlayer class, the algorithm intelligently places ships to create challenging but fair scenarios for the player. And placeShipsRandomly() uses the same logic to ensure that the ships are well placed on the player's board.
+
+
+### Implementation:
+#### 1. Enhanced Win/Lose Condition Check Algorithm:
+* Research Findings: I have researched and improved the algorithm responsible for checking win/lose conditions in the game.
+* Design Approach: Implemented a comprehensive algorithm that accurately determines when a player wins or loses based on ship hits, which would compare the computer board with the player target board comparing sunk ships and ship placements, and vice-versa for each player.
+* Example: The checkWin() method in the Board class efficiently checks whether all ships have been sunk, contributing to the game's termination, and it is used by isGameOver() to output the correct messages once the game has ended.
+
+
+### Testing:
+#### 1. Unit Testing for Win/Lose Condition Check:
+* Test Scenario: Simulated various game scenarios to ensure the checkWin() algorithm reliably identifies game-ending conditions.
+* Test Results: The algorithm consistently and accurately determines when a player wins or loses, contributing to the game's reliability.
+
+#### 2. Simulation Testing for input validation:
+* Test Scenario: Simulated multiple games to observe and analyze the effectiveness of the input validation and outputting of the correct messages.
+* Test Results: I have received mixed results, concluding that the correct messages are being output when the user enters invalid input and the user also gets a chance to enter an input until it becomes valid.
 
 ## e. Reflective Review and Continued Professional Development
-Reflect on your experience, opportunities for improvement, and how the project contributed to your professional development. Discuss any plans for future enhancements or iterations.
+#### Learning Experience:
+The development of the Battleship game provided a valuable hands-on experience in applying object-oriented design principles, coding standards, and best practices. It was quite a challenge ensuring to complete the requirements for a fully functioning game, with good logic and good user experience.
+
+#### Challenges Faced:
+Overcoming challenges such as writing logical functions for a turn based gameplay, implementing effective algorithms for placing ships randomly and ensuring the program doesn't timeout while trying to place ships on the board, and ensuring code modularity contributed to a deeper understanding of software development complexities.
+
+#### Code Quality and Refactoring:
+Conducting code reviews and refactoring sessions improved code quality. Identifying redundant code, enhancing readability, and trying to adhere to SOLID principles was very complicated, however it provided me with great knowledge and experience that can definetly be used in the future.
+
+#### Professional Development:
+1. Application of Design Patterns:
+The project allowed for the practical application of design patterns such as the Strategy Pattern (computer player decision-making) and Singleton Pattern (ConfigLoader).
+
+2. Git and Version Control:
+Utilizing Git for version control provided a structured approach to managing changes and maintaining code integrity.
+
+#### Future Enhancements:
+1. User Interface Enhancements:
+In the future iterations I would focus on improving the game's graphical interface, providing a more engaging and visually appealing experience, making a more user friendly game.
+
+2. Multiplayer Functionality:
+Next version would include multiplayer functionality to allow users to play against each other on the same computer, this would be a valuable addition, expanding the game's scope and making the game more challenging.
+
+3. Integration of Additional Features:
+I would integrate features such as leaderboards, achievements, or different game modes, this would add depth to the overall gaming experience.
+
+#### Overall Reflection:
+Apart from being a technical effort, the development of the Battleship game involved constant learning and progress. The project provided a framework for developing an in-depth understanding of software development processes and applying theoretical knowledge to practical situations. With an eye towards the future, the project establishes a strong basis for developing more complex and feature-rich applications. The knowledge gained strengthens the importance of design concepts, user-centric development techniques, and coding standards, which is a major contribution to continuing professional development.
