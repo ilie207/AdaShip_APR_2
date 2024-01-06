@@ -26,8 +26,8 @@ void Game::start() {
   const std::vector<std::pair<std::string, int>>& shipList = ConfigLoader::getInstance().getShipList();
 
 
-  std::cout << "Welcome to Battleship Game!\n" << std::endl;
-  std::cout << "Ship list:" << std::endl;
+  std::cout << "⚓️🏴‍☠️ Welcome to Battleship Game! 🏴‍☠️ ⚓️\n" << std::endl;
+  std::cout << "⛴️ Ship list:" << std::endl;
   for (const auto &ship : shipList) {
     std::cout << "Ship Name: " << ship.first 
       << " Length: " << ship.second << std::endl;
@@ -66,17 +66,6 @@ while(true) {
   }
  }
 }
-
-/*void Game::showWinner() {
-  if (computer.checkWin(computer.computerTargetBoard,
-    player.getPlayerBoard(), configLoader.getBoardSize())) {
-    std::cout << "Computer has sunk all your ships. You lose!" 
-      << std::endl;
-  } else if (player.checkWin(player.playerTargetBoard,
-    computer.computerBoard, configLoader.getBoardSize())) {
-    std::cout << "Congratulations! You've sunk all enemy ships. You win!" << std::endl;
-  }
-}*/
 
 void Game::resetGame() {
   // Clear previous ship list before loading the configuration again
@@ -173,9 +162,12 @@ void Game::playerVsComputer() {
 
 void Game::shipPlacement() {
   std::pair<int, int> boardSize = ConfigLoader::getInstance().getBoardSize();
-  
-  bool validInput = false;
-  
+    // Flag to check if user has confirmed the ship placement
+    bool userConfirmed = false; 
+
+  while (!userConfirmed) {
+    
+    bool validInput = false;
     while (!validInput){
       // Prompt the player to place ships manually or randomly
       std::cout << "\nDo you want to place ships manually or randomly? (M/R): ";
@@ -195,6 +187,7 @@ void Game::shipPlacement() {
 
       if (toupper(choice) == 'M') {
         player.placeShipsManually();
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
         validInput = true;
       } else if (toupper(choice) == 'R') {
         player.placeShipsRandomly();
@@ -205,11 +198,12 @@ void Game::shipPlacement() {
       }
     }
 
-    validInput = false;
-    while (!validInput){
       std::cout << "\nHere is your board with the ships placed:" << std::endl;
       player.printBoards();
 
+    // Flag to handle input for ship placement confirmation
+    bool waitForConfirmation = true; 
+    while (waitForConfirmation) {
       // Ask the player to confirm the ship placement
       std::cout << "Are you happy with this ship placement? (Y/N/R/Q): ";
       std::string resetInput;
@@ -229,16 +223,15 @@ void Game::shipPlacement() {
       
         switch (toupper(decision)) {
           case 'Y':
-            validInput = true;
+            userConfirmed = true; // User is happy with the ship placement
+            waitForConfirmation = false; 
             break;
           case 'N':
-            validInput = false;
-            player.resetBoards(boardSize);
-            computer.resetBoards(boardSize);
+            player.resetBoards(boardSize); // Reset the boards
+            waitForConfirmation = false; // No need to confirm again, go to place ships again
             break;
           case 'R':
             resetGame();
-            validInput = true; // After resetGame, the start function will loop again
             break;
           case 'Q':
             quitGame();
@@ -251,9 +244,7 @@ void Game::shipPlacement() {
              << "'N' to reset the placements,\n" 
              << "'R' to reset and start again,\n" 
              << "'Q' to quit." << std::endl; 
-      
-            validInput = false;
-            break;
+          }
         }
       }
       std::cout << "\nComputer is placing its ships on the board...\n";

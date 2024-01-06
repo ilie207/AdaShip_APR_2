@@ -35,6 +35,7 @@ public:
   int col, int length, bool horizontal, char symbol);
 
   void resetBoards(std::pair<int,int> boardSize);
+
   std::vector<std::pair<std::string, int>> shipList;
   std::vector<std::vector<char>> playerBoard;
   std::vector<std::vector<char>> playerTargetBoard;

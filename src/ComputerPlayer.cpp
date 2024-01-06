@@ -60,7 +60,7 @@ void ComputerPlayer::computerTurn() {
     if (isValidCoordinate(row, col, boardSize) && 
       isValidTarget(row, col, player->getPlayerBoard(), boardSize)) {
       // Announce the computer's target
-      std::cout << "Computer fires at " << static_cast<char>('A' + row) << col + 1 << std::endl;
+      std::cout << "Computer fires at " << static_cast<char>('A' + row) << col + 1 << " 💣" << std::endl;
 
       // Valid target, update the computer's target board
       updateComputerBoard(col, row, hit, shipSunk);
@@ -129,8 +129,8 @@ void ComputerPlayer::updateComputerBoard(int row, int col, bool &hit, bool &ship
 
 void ComputerPlayer::printBoards() const {
   auto boardSize = ConfigLoader::getInstance().getBoardSize();
-  std::cout << "Computer's Board:" << std::endl;
-  printBoard(computerBoard, boardSize);
+  //std::cout << "Computer's Board:" << std::endl;
+  //printBoard(computerBoard, boardSize);
   std::cout << std::endl;
   std::cout << "Computer's Target Board:" << std::endl;
   printBoard(computerTargetBoard, boardSize);

@@ -14,7 +14,7 @@ ConfigLoader &ConfigLoader::getInstance() {
 
 void ConfigLoader::loadConfig(Board &board) {
 
-  std::ifstream configFile("adaship_config.ini");
+  std::ifstream configFile("data/adaship_config.ini");
 
   if (!configFile.is_open()) {
     std::cerr << "Error: Unable to open configuration file." << std::endl;

@@ -1,0 +1,17 @@
+# Ignore editor-specific files and directories
+.vscode/
+.idea/
+
+# Ignore OS-specific files and directories
+.DS_Store
+Thumbs.db
+
+# Ignore user-specific files
+*.user
+*.suo
+*.userprefs
+
+# Ignore log files and databases
+*.log
+*.sqlite
+*.db
